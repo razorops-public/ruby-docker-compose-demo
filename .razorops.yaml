@@ -1,0 +1,14 @@
+
+tasks:
+  unit-test:
+    steps:
+    - checkout
+    - commands: 
+      - docker-compose down
+      - docker system prune -f
+    - commands:
+      - docker-compose build
+      - docker-compose up -d
+      - sleep 5
+      - docker-compose exec -T web rake nuke_db
+      - docker-compose exec -T web bundle exec rspec
