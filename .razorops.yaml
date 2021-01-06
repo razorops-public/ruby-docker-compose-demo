@@ -9,6 +9,6 @@ tasks:
     - commands:
       - docker-compose build
       - docker-compose up -d
-      - sleep 5
+      - sleep 4
       - docker-compose exec -T web rake nuke_db
       - docker-compose exec -T web bundle exec rspec
