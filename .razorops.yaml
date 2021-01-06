@@ -10,6 +10,11 @@ tasks:
     - commands:
       - docker-compose build
       - docker-compose up -d
-      - sleep 4
+      
+      - dockerize -wait tcp://:5432 -timeout 10s
+
       - docker-compose exec -T web rake nuke_db
       - docker-compose exec -T web bundle exec rspec
+    
+    - run: docker-compose down
+      when: always
