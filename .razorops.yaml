@@ -11,7 +11,7 @@ tasks:
       - docker-compose build
       - docker-compose up -d
       
-      - dockerize -wait tcp://:5432 -timeout 10s
+      - docker-compose exec -T web dockerize -wait tcp://db:5432
 
       - docker-compose exec -T web rake nuke_db
       - docker-compose exec -T web bundle exec rspec
