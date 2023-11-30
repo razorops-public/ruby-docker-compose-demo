@@ -3,6 +3,7 @@ global:
   - RACK_ENV=test
   - RAILS_ENV=test
   - DATABASE_URL=postgres://localhost/todo-test
+  - BUNDLE_PATH=vendor/bundle
 
 tasks:
   # test-with-docker:
