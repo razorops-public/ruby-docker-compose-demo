@@ -1,3 +1,8 @@
+global:
+  variables:
+  - RACK_ENV=test
+  - RAILS_ENV=test
+  - DATABASE_URL=postgres://localhost/todo-test
 
 tasks:
   # test-with-docker:
@@ -19,15 +24,26 @@ tasks:
   #     when: always
   
   test:
-    cache:
-    - key: ruby-sinatra-{{ checksum "Gemfile.lock" }}
-      paths:
-      - vendor/bundle
+    runner:
+      os_image: ubuntu
+      containers:
+      - image: postgres # db service
+        environment:
+        - POSTGRES_DB=todo-test
     steps:
     - checkout
-    - commands: 
-      - rbenv local 3.1.2
+    - cache/pull:
+        key: bundle-{{ checksum "Gemfile.lock" }}
+        fallback_key: bundle-
+    - commands:
+      - rbenv versions
+      - rbenv local 3.1.4
       - bundle check || bundle install
-    # - commands:
-    #   - bundle exec rake db:nuke_db
-    #   - bundle exec rake spec
+    - cache/push:
+        key: bundle-{{ checksum "Gemfile.lock" }}
+        paths:
+        - vendor/bundle
+    - commands:
+      - dockerize -wait tcp://localhost:5432
+      - bundle exec rake db:nuke_db
+      - bundle exec rake spec
