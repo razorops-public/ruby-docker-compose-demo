@@ -2,35 +2,37 @@ global:
   variables:
   - RACK_ENV=test
   - RAILS_ENV=test
-  - DATABASE_URL=postgres://localhost/todo-test
+  - DATABASE_URL=postgres://test:secret@localhost/todo-test
   - BUNDLE_PATH=vendor/bundle
 
 tasks:
-  # test-with-docker:
-  #   steps:
-  #   - checkout
-  #   - commands: 
-  #     - docker-compose down
-  #     - docker system prune -f
-  #   - commands:
-  #     - docker-compose build
-  #     - docker-compose up -d
+  test-with-compose:
+    steps:
+    - checkout
+    - commands: 
+      - docker-compose down
+      - docker system prune -f
+    - commands:
+      - docker-compose build
+      - docker-compose up -d
       
-  #     - docker-compose exec -T web dockerize -wait tcp://db:5432
+      - docker-compose exec -T web dockerize -wait tcp://db:5432
 
-  #     - docker-compose exec -T web rake nuke_db
-  #     - docker-compose exec -T web bundle exec rspec
+      - docker-compose exec -T web rake nuke_db
+      - docker-compose exec -T web bundle exec rspec
     
-  #   - run: docker-compose down
-  #     when: always
+    - run: docker-compose down
+      when: always
   
   test:
     runner:
       os_image: ubuntu
       containers:
-      - image: postgres # db service
+      - image: postgres
         environment:
         - POSTGRES_DB=todo-test
+        - POSTGRES_USER=test
+        - POSTGRES_PASSWORD=secret
     steps:
     - checkout
     - cache/pull:
@@ -46,5 +48,10 @@ tasks:
         - vendor/bundle
     - commands:
       - dockerize -wait tcp://localhost:5432
-      - bundle exec rake db:nuke_db
+      - bundle exec rake nuke_db
       - bundle exec rake spec
+
+    - when: on_fail
+      commands:
+      - docker ps -a
+      - docker logs postgres
