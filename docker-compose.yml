@@ -6,15 +6,21 @@ services:
     build: .
     environment:
     - COVERAGE=true
-    - DATABASE_URL=postgres://root:secret@db/todo-test
+    - DATABASE_URL=postgres://root:secret@database/todo-test
+    - RAILS_ENV=test
+    - RACK_ENV=test
+    command: 
+    - sh
+    - -c
+    - |
+      dockerize -wait tcp://database:5432
+      bundle exec rake nuke_db
+      bundle exec rake spec
     depends_on:
-    - db
-
-  db:
+    - database
+  database:
     image: postgres
     environment:
     - POSTGRES_DB=todo-test
     - POSTGRES_USER=root
     - POSTGRES_PASSWORD=secret
-    ports:
-    - 5432:5432

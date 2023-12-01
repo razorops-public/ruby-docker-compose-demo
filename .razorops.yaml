@@ -1,6 +1,12 @@
+global:
+  variables:
+  - RACK_ENV=test
+  - RAILS_ENV=test
+  - DATABASE_URL=postgres://test:secret@localhost/todo-test
+  - BUNDLE_PATH=vendor/bundle
 
 tasks:
-  unit-test:
+  test-with-compose:
     steps:
     - checkout
     - commands: 
@@ -8,12 +14,38 @@ tasks:
       - docker system prune -f
     - commands:
       - docker-compose build
-      - docker-compose up -d
-      
-      - docker-compose exec -T web dockerize -wait tcp://db:5432
-
-      - docker-compose exec -T web rake nuke_db
-      - docker-compose exec -T web bundle exec rspec
-    
+      - docker-compose up -d    
     - run: docker-compose down
       when: always
+
+  test:
+    runner:
+      os_image: ubuntu
+      containers:
+      - image: postgres
+        environment:
+        - POSTGRES_DB=todo-test
+        - POSTGRES_USER=test
+        - POSTGRES_PASSWORD=secret
+    steps:
+    - checkout
+    - cache/pull:
+        key: bundle-{{ checksum "Gemfile.lock" }}
+        fallback_key: bundle-
+    - commands:
+      - rbenv versions
+      - rbenv local 3.1.4
+      - bundle check || bundle install
+    - cache/push:
+        key: bundle-{{ checksum "Gemfile.lock" }}
+        paths:
+        - vendor/bundle
+    - commands:
+      - dockerize -wait tcp://localhost:5432
+      - bundle exec rake nuke_db
+      - bundle exec rake spec
+
+    - when: on_fail
+      commands:
+      - docker ps -a
+      - docker logs postgres
