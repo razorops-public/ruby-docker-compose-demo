@@ -1,9 +1,10 @@
 global:
   variables:
   - RACK_ENV=test
-  - RAILS_ENV=test
+  - SINATRA_ENV=test
   - DATABASE_URL=postgres://test:secret@localhost/todo-test
   - BUNDLE_PATH=vendor/bundle
+  - LANG=C.UTF-8
 
 tasks:
   test-with-compose:
@@ -31,21 +32,27 @@ tasks:
     - checkout
     - cache/pull:
         key: bundle-{{ checksum "Gemfile.lock" }}
-        fallback_key: bundle-
     - commands:
-      - rbenv versions
-      - rbenv local 3.1.4
-      - bundle check || bundle install
+      - rbenv local 3.1
+      - ruby -v
+      - bundle config set --local with $SINATRA_ENV 
+      - bundle install
     - cache/push:
         key: bundle-{{ checksum "Gemfile.lock" }}
         paths:
         - vendor/bundle
     - commands:
+      # wait for db
       - dockerize -wait tcp://localhost:5432
+      # execute tests
       - bundle exec rake nuke_db
-      - bundle exec rake spec
-
-    - when: on_fail
-      commands:
-      - docker ps -a
-      - docker logs postgres
+      - COVERAGE=true bundle exec rake spec
+    # upload coverage report to dashboard (generated above)
+    - reports/html:
+        dir: coverage
+        index: index.html # location of index file for preview
+    - reports/junit:
+        paths: [rspec.xml]
+    - commands:
+      ## use ruby-advisory DB for gems
+      - bundle exec bundler-audit
