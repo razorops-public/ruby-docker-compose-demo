@@ -4,6 +4,7 @@ global:
   - SINATRA_ENV=test
   - DATABASE_URL=postgres://test:secret@localhost/todo-test
   - BUNDLE_PATH=vendor/bundle
+  - LANG=C.UTF-8
 
 tasks:
   test-with-compose:
@@ -33,7 +34,9 @@ tasks:
         key: bundle-{{ checksum "Gemfile.lock" }}
     - commands:
       - rbenv local 3.1
-      - bundle check || bundle install
+      - ruby -v
+      - bundle config set --local with $SINATRA_ENV 
+      - bundle install
     - cache/push:
         key: bundle-{{ checksum "Gemfile.lock" }}
         paths:
@@ -49,5 +52,4 @@ tasks:
         dir: coverage
         index: index.html # location of index file for preview
     - commands:
-      - bundler-audit stats
-      - bundler-audit
+      - bundle exec bundler-audit
