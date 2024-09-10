@@ -1,7 +1,7 @@
 global:
   variables:
   - RACK_ENV=test
-  - RAILS_ENV=test
+  - SINATRA_ENV=test
   - DATABASE_URL=postgres://test:secret@localhost/todo-test
   - BUNDLE_PATH=vendor/bundle
 
@@ -51,7 +51,3 @@ tasks:
     - commands:
       - bundler-audit stats
       - bundler-audit
-    - when: on_fail
-      commands:
-      - docker ps -a
-      - docker logs postgres
