@@ -23,4 +23,5 @@ group :development, :test do
   gem "sqlite3"
   gem 'database_cleaner-sequel'
   gem "simplecov"
+  gem "bundler-audit"
 end

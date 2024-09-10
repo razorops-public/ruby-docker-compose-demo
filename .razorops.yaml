@@ -31,20 +31,26 @@ tasks:
     - checkout
     - cache/pull:
         key: bundle-{{ checksum "Gemfile.lock" }}
-        fallback_key: bundle-
     - commands:
-      - rbenv versions
-      - rbenv local 3.1.4
+      - rbenv local 3.1
       - bundle check || bundle install
     - cache/push:
         key: bundle-{{ checksum "Gemfile.lock" }}
         paths:
         - vendor/bundle
     - commands:
+      # wait for db
       - dockerize -wait tcp://localhost:5432
+      # execute tests
       - bundle exec rake nuke_db
-      - bundle exec rake spec
-
+      - COVERAGE=true bundle exec rake spec
+    # upload coverage report to dashboard (generated above)
+    - reports/html:
+        dir: coverage
+        index: index.html # location of index file for preview
+    - commands:
+      - bundler-audit stats
+      - bundler-audit
     - when: on_fail
       commands:
       - docker ps -a
