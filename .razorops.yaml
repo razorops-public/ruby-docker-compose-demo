@@ -51,7 +51,8 @@ tasks:
     - reports/html:
         dir: coverage
         index: index.html # location of index file for preview
-
+    - reports/junit:
+        paths: [rspec.xml]
     - commands:
       ## use ruby-advisory DB for gems
       - bundle exec bundler-audit
